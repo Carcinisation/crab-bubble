@@ -6,6 +6,7 @@ use ratatui::{
     Frame,
 };
 use tokio::sync::mpsc::UnboundedSender;
+use unicode_width::UnicodeWidthChar;
 
 use crate::state_store::{action::Action, State};
 
@@ -14,7 +15,7 @@ use super::{Component, ComponentRender};
 pub struct InputBox {
     /// Current value of the input box
     text: String,
-    /// Position of cursor in the editor area.
+    /// 에디터 커서의 위치로, 문자 인덱스를 나타낸다. 바이트 인덱스가 아님에 주의.
     cursor_position: usize,
 }
 
@@ -25,7 +26,7 @@ impl InputBox {
 
     pub fn set_text(&mut self, new_text: &str) {
         self.text = String::from(new_text);
-        self.cursor_position = self.text.len();
+        self.cursor_position = self.get_max_cursor_position();
     }
 
     pub fn reset(&mut self) {
@@ -35,6 +36,11 @@ impl InputBox {
 
     pub fn is_empty(&self) -> bool {
         self.text.is_empty()
+    }
+
+    /// 커서 최대값(문자 수)를 얻는다. 참고로 text.len()는 실제 문자 수가 아니라 바이트 수를 반환한다.
+    fn get_max_cursor_position(&self) -> usize {
+        self.text.char_indices().count()
     }
 
     fn move_cursor_left(&mut self) {
@@ -48,9 +54,18 @@ impl InputBox {
     }
 
     fn enter_char(&mut self, new_char: char) {
-        self.text.insert(self.cursor_position, new_char);
+        self.text.insert(self.get_cursor_byte_index(), new_char);
 
         self.move_cursor_right();
+    }
+
+    /// 현재 커서의 바이트 인덱스를 얻는다. 문자열은 UTF-8 형식이므로, 문자 인덱스 != 바이트 인덱스이다. 
+    fn get_cursor_byte_index(&self) -> usize {
+        self.text
+            .char_indices() // 문자열의 각 문자의 시작 위치와 문자를 반환하는 반복자를 생성한다.
+            .nth(self.cursor_position) // 반복자에서 n번째 문자의 시작 위치와 문자를 가져온다.
+            .map(|(i, _)| i) // (usize, char) 튜플에서 usize만 가져온다.
+            .unwrap_or(self.text.len()) // (안전하게 처리) Option<usize>에서 usize를 가져오고, None이면 문자열의 길이를 반환한다.
     }
 
     fn delete_char(&mut self) {
@@ -76,7 +91,20 @@ impl InputBox {
     }
 
     fn clamp_cursor(&self, new_cursor_pos: usize) -> usize {
-        new_cursor_pos.clamp(0, self.text.len())
+        new_cursor_pos.clamp(0, self.get_max_cursor_position())
+    }
+
+    /// 한글과 같은 double-byte 문자를 처리하기 위해 문자 너비를 고려하여 터미널 상의 커서 위치를 계산한다.
+    fn get_terminal_cursor_position(&self) -> u16 {
+        let mut terminal_cursor_position = 0;
+        for (i, c) in self.text.chars().enumerate() {
+            if i == self.cursor_position {
+                break;
+            }
+            // 문자 너비 더하기
+            terminal_cursor_position += c.width().unwrap_or(0) as u16;
+        }
+        terminal_cursor_position
     }
 }
 
@@ -149,7 +177,7 @@ impl ComponentRender<RenderProps> for InputBox {
             frame.set_cursor(
                 // Draw the cursor at the current position in the input field.
                 // This position is can be controlled via the left and right arrow key
-                props.area.x + self.cursor_position as u16 + 1,
+                props.area.x + self.get_terminal_cursor_position() as u16 + 1,
                 // Move one line down, from the border to the input line
                 props.area.y + 1,
             )
