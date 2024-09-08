@@ -88,6 +88,18 @@ impl StateStore {
                                     .context("could not send message")?;
                             }
                         },
+                        Action::NoticeTyping => {
+                            if let Some(active_room) = state.active_room.as_ref() {
+                                command_writer
+                                    .write(&command::UserCommand::NoticeTyping(
+                                        command::NoticeTypingCommand {
+                                            room: active_room.clone(),
+                                        },
+                                    ))
+                                    .await
+                                    .context("could not notice typing")?;
+                            }
+                        },
                         Action::SelectRoom { room } => {
                             if let Some(false) = state.try_set_active_room(room.as_str()).map(|room_data| room_data.has_joined) {
                                 command_writer

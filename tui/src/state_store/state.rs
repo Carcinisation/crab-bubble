@@ -1,5 +1,6 @@
 use std::collections::{HashMap, HashSet};
 
+use chrono::Utc;
 use circular_queue::CircularQueue;
 use comms::event;
 
@@ -26,6 +27,7 @@ pub struct RoomData {
     pub has_joined: bool,
     /// Has unread messages
     pub has_unread: bool,
+    pub users_typing_lastime: HashMap<String, usize>,
 }
 
 impl Default for RoomData {
@@ -37,6 +39,7 @@ impl Default for RoomData {
             messages: CircularQueue::with_capacity(MAX_MESSAGES_TO_STORE_PER_ROOM),
             has_joined: false,
             has_unread: false,
+            users_typing_lastime: HashMap::new(),
         }
     }
 }
@@ -48,6 +51,18 @@ impl RoomData {
             description,
             ..Default::default()
         }
+    }
+
+    pub fn is_user_typing(&self, user_id: &str, current_time: usize, seconds: usize) -> bool {
+        if let Some(last_time) = self.users_typing_lastime.get(user_id) {
+            current_time - last_time < seconds
+        } else {
+            false
+        }
+    }
+
+    pub fn is_user_typing_with_default(&self, user_id: &str, current_time: usize) -> bool {
+        self.is_user_typing(user_id, current_time, 3)
     }
 }
 
@@ -137,6 +152,21 @@ impl State {
                     user_id: event.user_id.clone(),
                     content: event.content.clone(),
                 });
+
+                if let Some(active_room) = self.active_room.as_ref() {
+                    if !active_room.eq(&event.room) {
+                        room_data.has_unread = true;
+                    }
+                }
+            }
+            event::Event::UserTyping(event) => {
+                let room_data = self.room_data_map.get_mut(&event.room).unwrap();
+
+                let current_chrono_time = Utc::now().timestamp() as usize;
+
+                room_data
+                    .users_typing_lastime
+                    .insert(event.user_id.clone(), current_chrono_time);
 
                 if let Some(active_room) = self.active_room.as_ref() {
                     if !active_room.eq(&event.room) {

@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use chrono::Utc;
 use crossterm::event::{KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
 use ratatui::{prelude::*, widgets::*, Frame};
 use tokio::sync::mpsc::UnboundedSender;
@@ -381,6 +382,7 @@ impl ComponentRender<()> for ChatPage {
             .as_ref()
             .and_then(|active_room| {
                 self.get_room_data(active_room).map(|room_data| {
+                    let current_time = Utc::now().timestamp() as usize;
                     let room_users_len = room_data.users.len();
                     let users_offset =
                         calculate_list_offset(container_room_users.height, room_users_len);
@@ -391,7 +393,12 @@ impl ComponentRender<()> for ChatPage {
                             .iter()
                             .skip(users_offset)
                             .map(|user_id| {
-                                ListItem::new(Line::from(Span::raw(format!("@{user_id}"))))
+                                let mut nickname = format!("@{}", user_id);
+                                if room_data.is_user_typing_with_default(user_id, current_time) {
+                                    nickname.push_str(" (*)");
+                                }
+
+                                ListItem::new(Line::from(Span::raw(nickname)))
                             })
                             .collect::<Vec<ListItem<'_>>>(),
                         room_users_len,

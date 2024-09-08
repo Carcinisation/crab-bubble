@@ -2,7 +2,7 @@ use std::{collections::HashMap, sync::Arc};
 
 use anyhow::Context;
 use comms::{
-    command::UserCommand,
+    command::{NoticeTypingCommand, UserCommand},
     event::{self, Event},
 };
 use tokio::{
@@ -86,6 +86,11 @@ impl ChatSession {
                 // remove the room from joined rooms and drop user session handle for the room
                 if let Some(urp) = self.joined_rooms.remove(&cmd.room) {
                     self.cleanup_room(urp).await?;
+                }
+            }
+            UserCommand::NoticeTyping(cmd) => {
+                if let Some((user_session_handle, _)) = self.joined_rooms.get(&cmd.room) {
+                    let _ = user_session_handle.notice_typing();
                 }
             }
             _ => {}

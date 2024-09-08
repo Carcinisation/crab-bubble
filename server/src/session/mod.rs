@@ -62,7 +62,7 @@ pub async fn handle_user_session(
                 // Handle a valid user command
                 Some(Ok(cmd)) => match cmd {
                     // For user session related commands, we need to handle them in the chat session
-                    UserCommand::JoinRoom(_) | UserCommand::SendMessage(_) | UserCommand::LeaveRoom(_) => {
+                    UserCommand::JoinRoom(_) | UserCommand::SendMessage(_) | UserCommand::LeaveRoom(_) | UserCommand::NoticeTyping(_) => {
                         chat_session.handle_user_command(cmd).await?;
                     }
                     _ => {}

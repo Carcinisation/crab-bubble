@@ -72,6 +72,17 @@ pub struct UserMessageBroadcastEvent {
     pub content: String,
 }
 
+/// A user notice typing state
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct UserTypingBroadcastEvent {
+    /// The slug of the room the user has sent the message to
+    #[serde(rename = "r")]
+    pub room: String,
+    /// The id of the user that has sent the message
+    #[serde(rename = "u")]
+    pub user_id: String,
+}
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "_et", rename_all = "snake_case")]
 /// Events that can be sent to the client
@@ -81,6 +92,7 @@ pub enum Event {
     RoomParticipation(RoomParticipationBroacastEvent),
     UserJoinedRoom(UserJoinedRoomReplyEvent),
     UserMessage(UserMessageBroadcastEvent),
+    UserTyping(UserTypingBroadcastEvent),
 }
 
 #[cfg(test)]
@@ -165,5 +177,15 @@ mod tests {
             &event,
             r#"{"_et":"user_message","r":"test","u":"test","c":"test"}"#,
         );
+    }
+
+    #[test]
+    fn test_user_typing_event() {
+        let event = Event::UserTyping(UserTypingBroadcastEvent {
+            room: "test".to_string(),
+            user_id: "test".to_string(),
+        });
+
+        assert_event_serialization(&event, r#"{"_et":"user_typing","r":"test","u":"test"}"#);
     }
 }

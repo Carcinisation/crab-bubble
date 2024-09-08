@@ -27,6 +27,14 @@ pub struct SendMessageCommand {
     pub content: String,
 }
 
+// User command for noticing typing state
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct NoticeTypingCommand {
+    // The room to send a notice to.
+    #[serde(rename = "r")]
+    pub room: String,
+}
+
 /// User Command for quitting the whole chat session.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct QuitCommand;
@@ -39,6 +47,7 @@ pub enum UserCommand {
     JoinRoom(JoinRoomCommand),
     LeaveRoom(LeaveRoomCommand),
     SendMessage(SendMessageCommand),
+    NoticeTyping(NoticeTypingCommand),
     Quit(QuitCommand),
 }
 

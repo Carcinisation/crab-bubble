@@ -50,6 +50,10 @@ impl MessageInputBox {
 
         self.input_box.reset();
     }
+
+    fn notice_typing(&mut self) {
+        let _ = self.action_tx.send(Action::NoticeTyping);
+    }
 }
 
 impl Component for MessageInputBox {
@@ -86,6 +90,8 @@ impl Component for MessageInputBox {
 
             if key.code == KeyCode::Enter {
                 self.submit_message();
+            } else {
+                self.notice_typing();
             }
         }
     }

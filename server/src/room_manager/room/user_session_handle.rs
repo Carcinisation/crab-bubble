@@ -61,4 +61,17 @@ impl UserSessionHandle {
 
         Ok(())
     }
+
+    pub fn notice_typing(&self) -> anyhow::Result<()> {
+        self.broadcast_tx
+            .send(comms::event::Event::UserTyping(
+                event::UserTypingBroadcastEvent {
+                    room: self.room.clone(),
+                    user_id: self.session_and_user_id.user_id.clone(),
+                },
+            ))
+            .context("could not write to the broadcast channel")?;
+
+        Ok(())
+    }
 }
