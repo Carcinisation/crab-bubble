@@ -32,6 +32,7 @@ pub struct ConnectPage {
     pub action_tx: UnboundedSender<Action>,
     // Mapped Props from State
     props: Props,
+    pub connection_state: ListState,
     // Internal Components
     input_box: InputBox,
 }
@@ -62,6 +63,7 @@ impl Component for ConnectPage {
             action_tx: action_tx.clone(),
             //
             props: Props::from(state),
+            connection_state: ListState::default(),
             //
             input_box,
         }
@@ -111,7 +113,7 @@ impl ComponentRender<()> for ConnectPage {
             .constraints(
                 [
                     Constraint::Ratio(1, 3),
-                    Constraint::Min(1),
+                    Constraint::Min(8),
                     Constraint::Ratio(1, 3),
                 ]
                 .as_ref(),
@@ -126,7 +128,7 @@ impl ComponentRender<()> for ConnectPage {
             .constraints(
                 [
                     Constraint::Ratio(1, 3),
-                    Constraint::Min(1),
+                    Constraint::Min(8),
                     Constraint::Ratio(1, 3),
                 ]
                 .as_ref(),
@@ -136,13 +138,18 @@ impl ComponentRender<()> for ConnectPage {
             panic!("The horizontal layout should have 3 chunks")
         };
 
-        let [container_addr_input, container_help_text, container_error_message] =
+        let [container_connection_method, 
+             container_addr_input, 
+             container_help_text, 
+             container_error_message
+            ] =
             *Layout::default()
                 .direction(Direction::Vertical)
                 .constraints(
                     [
-                        Constraint::Length(3),
-                        Constraint::Length(3),
+                        Constraint::Min(4),
+                        Constraint::Min(3),
+                        Constraint::Min(1),
                         Constraint::Min(1),
                     ]
                     .as_ref(),
@@ -152,6 +159,31 @@ impl ComponentRender<()> for ConnectPage {
             panic!("The left layout should have 3 chunks")
         };
 
+        let connect_methods: Vec<ListItem> = vec![
+            ListItem::new("퍼블릭"),
+            ListItem::new("로컬"),
+        ];
+
+        // 연결 방식을 퍼블릭으로 할 지 로컬로 할 지 선택하는 목록
+        let connect_methods = List::new(connect_methods)
+            .block(
+                Block::default()
+                    .borders(Borders::ALL)
+                    .title("연결 방법"),
+            )
+            .highlight_style(
+                Style::default()
+                    .fg(Color::Yellow)
+                    .add_modifier(Modifier::BOLD),
+            );
+        let mut connection_state: ListState = self.connection_state.clone();
+
+        frame.render_stateful_widget(
+            connect_methods, 
+            container_connection_method,
+             &mut connection_state);
+
+        
         self.input_box.render(
             frame,
             input_box::RenderProps {
