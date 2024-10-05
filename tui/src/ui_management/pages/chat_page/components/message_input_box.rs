@@ -1,4 +1,4 @@
-use crossterm::event::{KeyCode, KeyEvent, KeyEventKind};
+use crossterm::event::{KeyCode, KeyEvent, KeyEventKind, MouseEvent};
 use ratatui::{
     prelude::{Backend, Rect},
     style::Color,
@@ -95,6 +95,8 @@ impl Component for MessageInputBox {
             }
         }
     }
+
+    fn handle_mouse_event(&mut self, mouse: MouseEvent) {}
 }
 
 impl SectionActivation for MessageInputBox {

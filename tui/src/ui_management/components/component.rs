@@ -1,4 +1,4 @@
-use crossterm::event::KeyEvent;
+use crossterm::event::{KeyEvent, MouseEvent};
 use ratatui::{prelude::Backend, Frame};
 use tokio::sync::mpsc::UnboundedSender;
 
@@ -15,6 +15,8 @@ pub trait Component {
     fn name(&self) -> &str;
 
     fn handle_key_event(&mut self, key: KeyEvent);
+
+    fn handle_mouse_event(&mut self, mouse: MouseEvent);
 }
 
 pub trait ComponentRender<Props> {

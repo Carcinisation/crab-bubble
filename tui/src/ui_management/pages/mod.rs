@@ -1,4 +1,4 @@
-use crossterm::event::KeyEvent;
+use crossterm::event::{KeyEvent, MouseEvent};
 use ratatui::{prelude::Backend, Frame};
 use tokio::sync::mpsc::UnboundedSender;
 
@@ -87,6 +87,10 @@ impl Component for AppRouter {
 
     fn handle_key_event(&mut self, key: KeyEvent) {
         self.get_active_page_component_mut().handle_key_event(key)
+    }
+
+    fn handle_mouse_event(&mut self, mouse: MouseEvent) {
+        self.get_active_page_component_mut().handle_mouse_event(mouse);
     }
 }
 

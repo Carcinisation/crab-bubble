@@ -1,4 +1,4 @@
-use crossterm::event::{KeyCode, KeyEvent, KeyEventKind};
+use crossterm::event::{KeyCode, KeyEvent, KeyEventKind, MouseEvent};
 use ratatui::{
     prelude::{Backend, Rect},
     style::{Color, Style, Stylize},
@@ -149,6 +149,8 @@ impl Component for InputBox {
             _ => {}
         }
     }
+
+    fn handle_mouse_event(&mut self, mouse: MouseEvent) {}
 }
 
 pub struct RenderProps {

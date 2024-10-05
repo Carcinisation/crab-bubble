@@ -1,4 +1,4 @@
-use crossterm::event::{KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
+use crossterm::event::{KeyCode, KeyEvent, KeyEventKind, KeyModifiers, MouseEvent};
 use ratatui::{prelude::*, widgets::*, Frame};
 use tokio::sync::mpsc::UnboundedSender;
 
@@ -102,6 +102,8 @@ impl Component for ConnectPage {
             _ => {}
         }
     }
+
+    fn handle_mouse_event(&mut self, mouse: MouseEvent) {}
 }
 
 impl ComponentRender<()> for ConnectPage {

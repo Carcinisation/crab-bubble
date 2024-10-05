@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use chrono::Utc;
-use crossterm::event::{KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
+use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers, MouseEvent, MouseEventKind};
 use ratatui::{prelude::*, widgets::*, Frame};
 use tokio::sync::mpsc::UnboundedSender;
 
@@ -228,6 +228,24 @@ impl Component for ChatPage {
                     _ => (),
                 }
             }
+        }
+    }
+
+    fn handle_mouse_event(&mut self, mouse: MouseEvent) {
+        if !matches!(mouse.kind, MouseEventKind::Down(event::MouseButton::Left)) {
+            return;
+        }
+
+        let active_section = self.active_section.clone();
+
+        match active_section {
+            Some(section) => {
+                self.get_component_for_section_mut(&section)
+                .handle_mouse_event(mouse);
+            
+                self.disable_section(&section);
+            },
+            _ => {}
         }
     }
 }

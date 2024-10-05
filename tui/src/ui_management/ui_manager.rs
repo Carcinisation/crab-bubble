@@ -62,6 +62,9 @@ impl UiManager {
                     Some(Ok(Event::Key(key)))  => {
                         app_router.handle_key_event(key);
                     },
+                    Some(Ok(Event::Mouse(mouse))) => {
+                        app_router.handle_mouse_event(mouse);
+                    },
                     None => break Ok(Interrupted::UserInt),
                     _ => (),
                 },
