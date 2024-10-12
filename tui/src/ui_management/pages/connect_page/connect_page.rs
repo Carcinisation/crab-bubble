@@ -32,24 +32,35 @@ pub struct ConnectPage {
     pub action_tx: UnboundedSender<Action>,
     // Mapped Props from State
     props: Props,
+    // 퍼블릭 서버로 할 지 로컬 서버로 할 지 선택
     pub connection_state: ListState,
     // Internal Components
     input_box: InputBox,
+    show_local_server_panel: bool,
 }
 
 impl ConnectPage {
     fn connect_to_server(&mut self) {
-        if self.input_box.is_empty() {
-            return;
-        }
 
-        let _ = self.action_tx.send(Action::ConnectToServerRequest {
-            addr: self.input_box.text().to_string(),
-        });
+        if self.show_local_server_panel {
+            if self.input_box.is_empty() {
+                return;
+            }
+    
+            let _ = self.action_tx.send(Action::ConnectToServerRequest {
+                addr: self.input_box.text().to_string(),
+            });
+        }
+        else {
+            let _ = self.action_tx.send(Action::ConnectToServerRequest {
+                addr: REMOTE_SERVER_ADDR.to_string(),
+            });
+        }
     }
 }
 
-const DEFAULT_SERVER_ADDR: &str = "localhost:8080";
+const DEFAULT_LOCAL_SERVER_ADDR: &str = "localhost:8080";
+const REMOTE_SERVER_ADDR: &str = "bugcaptor.net:8781";
 
 impl Component for ConnectPage {
     fn new(state: &State, action_tx: UnboundedSender<Action>) -> Self
@@ -57,15 +68,19 @@ impl Component for ConnectPage {
         Self: Sized,
     {
         let mut input_box = InputBox::new(state, action_tx.clone());
-        input_box.set_text(DEFAULT_SERVER_ADDR);
+        input_box.set_text(DEFAULT_LOCAL_SERVER_ADDR);
+
+        let mut _connection_state = ListState::default();
+        _connection_state.select(Some(0));
 
         ConnectPage {
             action_tx: action_tx.clone(),
             //
             props: Props::from(state),
-            connection_state: ListState::default(),
+            connection_state: _connection_state,
             //
             input_box,
+            show_local_server_panel: false,
         }
         .move_with_state(state)
     }
@@ -85,13 +100,23 @@ impl Component for ConnectPage {
     }
 
     fn handle_key_event(&mut self, key: KeyEvent) {
-        self.input_box.handle_key_event(key);
-
+        if self.show_local_server_panel {
+            self.input_box.handle_key_event(key);
+        }
+        
         if key.kind != KeyEventKind::Press {
             return;
         }
 
         match key.code {
+            KeyCode::Up => {
+                self.connection_state.select(Some(0));
+                self.show_local_server_panel = false; 
+            }
+            KeyCode::Down => {
+                self.connection_state.select(Some(1));
+                self.show_local_server_panel = true;
+            }
             KeyCode::Enter => {
                 self.connect_to_server();
             }
@@ -175,7 +200,8 @@ impl ComponentRender<()> for ConnectPage {
                 Style::default()
                     .fg(Color::Yellow)
                     .add_modifier(Modifier::BOLD),
-            );
+            )
+            .highlight_symbol(">");
         let mut connection_state: ListState = self.connection_state.clone();
 
         frame.render_stateful_widget(
@@ -184,15 +210,25 @@ impl ComponentRender<()> for ConnectPage {
              &mut connection_state);
 
         
-        self.input_box.render(
-            frame,
-            input_box::RenderProps {
-                title: "Server Host and Port".into(),
-                area: container_addr_input,
-                border_color: Color::Yellow,
-                show_cursor: true,
-            },
-        );
+        if self.show_local_server_panel {
+            self.input_box.render(
+                frame,
+                input_box::RenderProps {
+                    title: "Server Host and Port".into(),
+                    area: container_addr_input,
+                    border_color: Color::White,
+                    show_cursor: true,
+                },
+            );
+        }
+        else {
+            let default_server = Paragraph::new(Text::from(Line::from(vec![
+                "Default Server: ".into(),
+                REMOTE_SERVER_ADDR.bold(),
+            ])))
+            .style(Style::default().fg(Color::Yellow));
+            frame.render_widget(default_server, container_addr_input);
+        }
 
         let help_text = Paragraph::new(Text::from(Line::from(vec![
             "Press ".into(),
