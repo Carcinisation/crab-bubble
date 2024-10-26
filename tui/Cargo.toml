@@ -18,3 +18,5 @@ serde_json = "1.0.105"
 tokio = { version = "1.32.0", features = ["full"] }
 tokio-stream = { version = "0.1.14" }
 unicode-width = "0.1"
+log = "0.4"
+simplelog = "0.11"

@@ -6,6 +6,8 @@ mod state_store;
 mod termination;
 mod ui_management;
 
+mod logger;
+
 use termination::{Interrupted, Terminator};
 
 #[tokio::main]
@@ -14,6 +16,8 @@ async fn main() -> anyhow::Result<()> {
     let (state_store, state_rx) = StateStore::new();
     let (ui_manager, action_rx) = UiManager::new();
 
+
+    logger::init_logger();
     tokio::try_join!(
         state_store.main_loop(terminator, action_rx, interrupt_rx.resubscribe()),
         ui_manager.main_loop(state_rx, interrupt_rx.resubscribe()),
