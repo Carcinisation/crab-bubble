@@ -21,6 +21,7 @@ pub struct RoomState {
     pub description: String,
     pub has_joined: bool,
     pub has_unread: bool,
+    pub user_count: usize,
 }
 
 struct Props {
@@ -40,6 +41,7 @@ impl From<&State> for Props {
                 description: room_data.description.clone(),
                 has_joined: room_data.has_joined,
                 has_unread: room_data.has_unread,
+                user_count: room_data.users.len(),
             })
             .collect::<Vec<RoomState>>();
 
@@ -195,9 +197,10 @@ impl ComponentRender<RenderProps> for RoomList {
             .iter()
             .map(|room_state| {
                 let room_tag = format!(
-                    "#{}{}",
-                    room_state.name,
-                    if room_state.has_unread { "*" } else { "" }
+                    "{count}| #{name}{read}",
+                    count = format!("{}명", room_state.user_count),
+                    name = room_state.name,
+                    read = if room_state.has_unread { "*" } else { "" }
                 );
                 let content = Line::from(Span::raw(room_tag));
 
