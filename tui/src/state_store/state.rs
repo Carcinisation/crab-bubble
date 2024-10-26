@@ -192,7 +192,12 @@ impl State {
     }
 
     /// Tries to set the active room as the given room. Returns the [RoomData] associated to the room.
-    pub fn try_set_active_room(&mut self, room: &str) -> Option<&RoomData> {
+    pub fn try_set_active_room(&mut self, room: &str, prev_room: Option<&str>) -> Option<&RoomData> {
+        if  let Some(prev_room) = prev_room {
+            let prev_room_data = self.room_data_map.get_mut(prev_room)?;
+            prev_room_data.users.remove(&self.user_id);
+        }
+
         let room_data = self.room_data_map.get_mut(room)?;
         room_data.has_unread = false;
 

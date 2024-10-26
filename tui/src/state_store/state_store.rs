@@ -100,8 +100,9 @@ impl StateStore {
                                     .context("could not notice typing")?;
                             }
                         },
-                        Action::SelectRoom { room } => {
-                            if let Some(false) = state.try_set_active_room(room.as_str()).map(|room_data| room_data.has_joined) {
+                        Action::SelectRoom { room, prev_room } => {
+                            if let Some(false) = state.try_set_active_room(
+                                room.as_str(), prev_room.as_deref()).map(|room_data| room_data.has_joined) {
                                 command_writer
                                     .write(&command::UserCommand::JoinRoom(command::JoinRoomCommand {
                                         room,

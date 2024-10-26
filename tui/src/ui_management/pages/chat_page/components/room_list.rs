@@ -158,6 +158,12 @@ impl Component for RoomList {
                 // TODO: handle the error scenario somehow
                 let _ = self.action_tx.send(Action::SelectRoom {
                     room: room_state.name.clone(),
+                    prev_room: if self.props.active_room.is_some() {
+                        let active_room = self.props.active_room.as_ref().unwrap();
+                        Some(active_room.to_string())
+                    } else {
+                        None
+                    },
                 });
             }
             _ => (),
